@@ -1,0 +1,57 @@
+/* ideaListViewComponent.css */
+
+/* Remove border from the lightning card (main border around the list view) */
+.lightning-card {
+    border: none;
+    box-shadow: none; /* Remove any box-shadow that might appear as a border */
+    max-width: 100%; /* Ensure the card does not exceed its container */
+    overflow-x: auto; /* Allow horizontal scrolling if content overflows */
+}
+
+/* Controlled table layout to handle long content */
+.slds-table {
+    border: none; /* Remove border around the table */
+    border-collapse: collapse; /* Ensure no gaps between cells */
+    outline: none; /* Remove outline that might appear as a border */
+    box-shadow: none; /* Remove any box-shadow that might appear as a border */
+    table-layout: auto; /* Allow table to adjust column widths based on content */
+    width: 100%; /* Make sure the table takes up the full width of its container */
+    max-width: 100%; /* Prevent the table from exceeding its container */
+    overflow-x: auto; /* Allow horizontal scrolling if content overflows */
+}
+
+/* Ensure table cells wrap text and prevent overflow */
+.slds-table th, .slds-table td {
+    border: none;
+    word-wrap: break-word; /* Force text to wrap within the cell */
+    white-space: normal; /* Allow wrapping within the cell */
+    overflow: hidden; /* Hide any overflowing content */
+    text-overflow: ellipsis; /* Add ellipsis (...) for overflowing text */
+    padding: 8px; /* Add some padding for better readability */
+    min-width: 10px; /* Set a minimum width for columns */
+    max-width: 300px; /* Set a maximum width for columns to prevent overflow */
+}
+
+/* Add border only to the bottom of the thead */
+.slds-table thead {
+    border-bottom: 2px solid #DDDDDD;
+}
+
+/* Add border under each row in tbody */
+.slds-table tbody td {
+    border-bottom: 1px solid #DDDDDD;
+}
+
+/* Optionally, remove the last row's bottom border */
+.slds-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Style the title of the lightning-card */
+.lightning-card__header {
+    background-color: transparent; /* Remove background color */
+    border-bottom: none; /* Remove border under the title */
+    font-size: 1.2em; /* Change font size */
+    color: #333; /* Change text color */
+    padding: 0; /* Adjust padding */
+}
