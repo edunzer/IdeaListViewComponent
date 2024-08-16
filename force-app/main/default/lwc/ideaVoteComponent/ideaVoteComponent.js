@@ -30,33 +30,39 @@ export default class IdeaVoteComponent extends LightningElement {
 
     updateVoteClasses() {
         if (this.idea && this.idea.userVote) {
-            // Determine the state for the upvote button
             if (this.idea.userVote.Type__c === 'Up') {
                 this.upVoteClass = 'icon-button active';
                 this.upVoteVariant = 'inverse';
                 this.downVoteClass = 'icon-button';
                 this.downVoteVariant = 'bare';
-            } 
-            // Determine the state for the downvote button
-            else if (this.idea.userVote.Type__c === 'Down') {
+            } else if (this.idea.userVote.Type__c === 'Down') {
                 this.upVoteClass = 'icon-button';
                 this.upVoteVariant = 'bare';
                 this.downVoteClass = 'icon-button active';
                 this.downVoteVariant = 'inverse';
             }
         } else {
-            // No vote, both buttons are in their default state
             this.upVoteClass = 'icon-button';
             this.downVoteClass = 'icon-button';
             this.upVoteVariant = 'bare';
             this.downVoteVariant = 'bare';
         }
-    }           
+    }
 
     handleUpVote() {
+        const initialVoteType = this.idea && this.idea.userVote ? this.idea.userVote.Type__c : null;
+
         handleUpVote({ ideaId: this.recordId })
             .then(() => {
-                this.showToast('Success', 'Upvoted successfully', 'success');
+                let message;
+                if (initialVoteType === 'Up') {
+                    message = 'Upvote removed successfully';
+                } else if (initialVoteType === 'Down') {
+                    message = 'Vote changed to Upvote successfully';
+                } else {
+                    message = 'Upvoted successfully';
+                }
+                this.showToast('Success', message, 'success');
                 return refreshApex(this.wiredIdeaResult);
             })
             .then(() => {
@@ -68,9 +74,19 @@ export default class IdeaVoteComponent extends LightningElement {
     }
 
     handleDownVote() {
+        const initialVoteType = this.idea && this.idea.userVote ? this.idea.userVote.Type__c : null;
+
         handleDownVote({ ideaId: this.recordId })
             .then(() => {
-                this.showToast('Success', 'Downvoted successfully', 'success');
+                let message;
+                if (initialVoteType === 'Down') {
+                    message = 'Downvote removed successfully';
+                } else if (initialVoteType === 'Up') {
+                    message = 'Vote changed to Downvote successfully';
+                } else {
+                    message = 'Downvoted successfully';
+                }
+                this.showToast('Success', message, 'success');
                 return refreshApex(this.wiredIdeaResult);
             })
             .then(() => {
