@@ -6,11 +6,11 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
 
 export default class IdeaVoteComponent extends LightningElement {
-    @api recordId; // Receives the record ID of the Idea
+    @api recordId;
 
     idea;
-    upVoteVariant = '';
-    downVoteVariant = '';
+    upVoteClass = 'icon-button'; // Default class
+    downVoteClass = 'icon-button'; // Default class
     wiredIdeaResult;
 
     @wire(getIdeasWithVotes, { sourceType: 'CurrentUser', sortField: 'Total_Votes__c', sortOrder: 'DESC' })
@@ -19,7 +19,7 @@ export default class IdeaVoteComponent extends LightningElement {
         if (result.data) {
             this.idea = result.data.find(ideaWrapper => ideaWrapper.idea.Id === this.recordId);
             if (this.idea) {
-                this.updateVoteVariants();
+                this.updateVoteClasses();
             }
             this.error = undefined;
         } else if (result.error) {
@@ -28,15 +28,30 @@ export default class IdeaVoteComponent extends LightningElement {
         }
     }
 
-    updateVoteVariants() {
+    updateVoteClasses() {
         if (this.idea && this.idea.userVote) {
-            this.upVoteVariant = this.idea.userVote.Type__c === 'Up' ? 'brand' : '';
-            this.downVoteVariant = this.idea.userVote.Type__c === 'Down' ? 'brand' : '';
+            // Determine the state for the upvote button
+            if (this.idea.userVote.Type__c === 'Up') {
+                this.upVoteClass = 'icon-button active';
+                this.upVoteVariant = 'inverse';
+                this.downVoteClass = 'icon-button';
+                this.downVoteVariant = 'bare';
+            } 
+            // Determine the state for the downvote button
+            else if (this.idea.userVote.Type__c === 'Down') {
+                this.upVoteClass = 'icon-button';
+                this.upVoteVariant = 'bare';
+                this.downVoteClass = 'icon-button active';
+                this.downVoteVariant = 'inverse';
+            }
         } else {
-            this.upVoteVariant = '';
-            this.downVoteVariant = '';
+            // No vote, both buttons are in their default state
+            this.upVoteClass = 'icon-button';
+            this.downVoteClass = 'icon-button';
+            this.upVoteVariant = 'bare';
+            this.downVoteVariant = 'bare';
         }
-    }
+    }           
 
     handleUpVote() {
         handleUpVote({ ideaId: this.recordId })
@@ -45,7 +60,7 @@ export default class IdeaVoteComponent extends LightningElement {
                 return refreshApex(this.wiredIdeaResult);
             })
             .then(() => {
-                this.updateVoteVariants(); // Ensure the variants are updated after refresh
+                this.updateVoteClasses();
             })
             .catch(error => {
                 this.showToast('Error', 'Error upvoting: ' + error.body.message, 'error');
@@ -59,7 +74,7 @@ export default class IdeaVoteComponent extends LightningElement {
                 return refreshApex(this.wiredIdeaResult);
             })
             .then(() => {
-                this.updateVoteVariants(); // Ensure the variants are updated after refresh
+                this.updateVoteClasses();
             })
             .catch(error => {
                 this.showToast('Error', 'Error downvoting: ' + error.body.message, 'error');
