@@ -3,12 +3,12 @@
     <apiVersion>61.0</apiVersion>
     <isExposed>true</isExposed>
     <targets>
-        <target>lightning__RecordPage</target>
+        <!-- Make the component available only in Experience Builder (Community Sites) -->
         <target>lightningCommunity__Default</target>
         <target>lightningCommunity__Page</target>
     </targets>
     <targetConfigs>
-        <targetConfig targets="lightning__RecordPage,lightningCommunity__Default">
+        <targetConfig targets="lightningCommunity__Default">
             <property name="recordId" type="String" />
         </targetConfig>
     </targetConfigs>
