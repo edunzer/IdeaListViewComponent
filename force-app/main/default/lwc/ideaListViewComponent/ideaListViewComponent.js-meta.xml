@@ -13,6 +13,7 @@
             <property name="sourceType" type="String" default="All" label="Source Type" description="Specify whether to show all ideas or only those submitted by the current user. Possible values: 'All', 'CurrentUser'." />
             <property name="sortField" type="String" default="Total_Votes__c" label="Sort Field" description="Field by which to sort the ideas." />
             <property name="sortOrder" type="String" default="DESC" label="Sort Order" description="Sort order of the ideas. Possible values: 'ASC', 'DESC'." />
+            <property name="statusFilter" type="String" default="" label="Status Filter" description="Comma-delimited list of statuses to include in the results." />
         </targetConfig>
     </targetConfigs>
 </LightningComponentBundle>
