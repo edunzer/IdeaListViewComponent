@@ -5,12 +5,16 @@ import handleDownVote from '@salesforce/apex/IdeaListViewComponentController.han
 import { refreshApex } from '@salesforce/apex';
 
 export default class IdeaListViewComponent extends LightningElement {
-    @api title = 'Most Popular Ideas';
+    @api title = 'Most Popular Ideas'; // Title set from the property in the .js-meta.xml
+    @api sourceType = 'All'; // Default to showing all ideas
+    @api sortField = 'Total_Votes__c'; // Default sort field
+    @api sortOrder = 'DESC'; // Default sort order (descending)
+
     ideas = [];
     error;
     wiredIdeasResult;
 
-    @wire(getIdeasWithVotes)
+    @wire(getIdeasWithVotes, { sourceType: '$sourceType', sortField: '$sortField', sortOrder: '$sortOrder' })
     wiredIdeas(result) {
         this.wiredIdeasResult = result;
         const { data, error } = result;

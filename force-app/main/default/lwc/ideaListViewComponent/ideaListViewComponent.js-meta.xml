@@ -3,32 +3,16 @@
     <apiVersion>61.0</apiVersion>
     <isExposed>true</isExposed>
     <targets>
-        <!-- Make the component available in Experience Builder -->
-        <target>lightningCommunity__Page</target>
+        <!-- Make the component available only in Experience Builder (Community Sites) -->
         <target>lightningCommunity__Default</target>
-        <!-- Make the component available in Lightning App Builder -->
-        <target>lightning__RecordPage</target>
-        <target>lightning__AppPage</target>
-        <target>lightning__HomePage</target>
+        <target>lightningCommunity__Page</target>
     </targets>
     <targetConfigs>
-        <targetConfig targets="lightning__RecordPage">
-            <objects>
-                <object>Idea__c</object>
-            </objects>
-            <supportedFormFactors>
-                <supportedFormFactor type="Small" />
-                <supportedFormFactor type="Large" />
-            </supportedFormFactors>
-        </targetConfig>
-        <targetConfig targets="lightning__AppPage,lightning__HomePage">
-            <supportedFormFactors>
-                <supportedFormFactor type="Small" />
-                <supportedFormFactor type="Large" />
-            </supportedFormFactors>
-        </targetConfig>
         <targetConfig targets="lightningCommunity__Default">
             <property name="title" type="String" default="Most Popular Ideas" label="Title of the Popup"/>
+            <property name="sourceType" type="String" default="All" label="Source Type" description="Specify whether to show all ideas or only those submitted by the current user. Possible values: 'All', 'CurrentUser'." />
+            <property name="sortField" type="String" default="Total_Votes__c" label="Sort Field" description="Field by which to sort the ideas." />
+            <property name="sortOrder" type="String" default="DESC" label="Sort Order" description="Sort order of the ideas. Possible values: 'ASC', 'DESC'." />
         </targetConfig>
     </targetConfigs>
 </LightningComponentBundle>

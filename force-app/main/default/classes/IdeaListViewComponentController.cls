@@ -1,20 +1,30 @@
 public with sharing class IdeaListViewComponentController {
 
-    // Existing method to get ideas with votes
     @AuraEnabled(cacheable=true)
-    public static List<IdeaWrapper> getIdeasWithVotes() {
+    public static List<IdeaWrapper> getIdeasWithVotes(String sourceType, String sortField, String sortOrder) {
         Id currentUserId = UserInfo.getUserId();
 
-        List<Idea__c> ideas = [SELECT Id, Name, Product_Tag__c, Product_Tag__r.Name, Status__c, Subject__c, Submitted_By__c, Submitted_By__r.Name, Up__c, Down__c 
-                               FROM Idea__c
-                               ORDER BY Total_Votes__c DESC
-                               LIMIT 100];
+        // Base query for ideas
+        String baseQuery = 'SELECT Id, Name, Product_Tag__c, Product_Tag__r.Name, Status__c, Subject__c, Submitted_By__c, Submitted_By__r.Name, Up__c, Down__c FROM Idea__c';
 
+        // Apply filter based on sourceType
+        if (sourceType == 'CurrentUser') {
+            baseQuery += ' WHERE Submitted_By__c = :currentUserId';
+        }
+
+        // Apply sorting based on sortField and sortOrder
+        baseQuery += ' ORDER BY ' + sortField + ' ' + sortOrder + ' LIMIT 100';
+
+        // Execute the query
+        List<Idea__c> ideas = Database.query(baseQuery);
+
+        // Collect idea IDs for further processing
         Set<Id> ideaIds = new Set<Id>();
         for (Idea__c idea : ideas) {
             ideaIds.add(idea.Id);
         }
 
+        // Map to hold votes related to the ideas
         Map<Id, Idea_Vote__c> ideaVotesMap = new Map<Id, Idea_Vote__c>();
         if (!ideaIds.isEmpty()) {
             for (Idea_Vote__c vote : [SELECT Id, Idea__c, Type__c, Submitted_By__c
@@ -25,6 +35,7 @@ public with sharing class IdeaListViewComponentController {
             }
         }
 
+        // Wrap the Ideas and associate the votes
         List<IdeaWrapper> ideaList = new List<IdeaWrapper>();
         for (Idea__c idea : ideas) {
             Idea_Vote__c userVote = ideaVotesMap.get(idea.Id);
