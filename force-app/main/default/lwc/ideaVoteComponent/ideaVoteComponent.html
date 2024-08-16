@@ -1,0 +1,17 @@
+<template>
+    <template if:true={idea}>
+        <div class="button-container">
+            <button class={upVoteClass} onclick={handleUpVote}>
+                <lightning-icon icon-name="utility:like" variant={upVoteVariant} alternative-text="Up Vote"></lightning-icon>
+            </button>
+            <button class={downVoteClass} onclick={handleDownVote}>
+                <lightning-icon icon-name="utility:dislike" variant={downVoteVariant} alternative-text="Down Vote"></lightning-icon>
+            </button>
+        </div>
+    </template>
+    <template if:true={error}>
+        <div class="slds-text-color_error">
+            {error}
+        </div>
+    </template>
+</template>
