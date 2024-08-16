@@ -11,20 +11,15 @@ export default class IdeaVoteComponent extends LightningElement {
     idea;
     upVoteVariant = '';
     downVoteVariant = '';
-    error;
+    wiredIdeaResult;
 
     @wire(getIdeasWithVotes, { sourceType: 'CurrentUser', sortField: 'Total_Votes__c', sortOrder: 'DESC' })
     wiredIdea(result) {
+        this.wiredIdeaResult = result;
         if (result.data) {
             this.idea = result.data.find(ideaWrapper => ideaWrapper.idea.Id === this.recordId);
             if (this.idea) {
-                if (this.idea.userVote) {
-                    if (this.idea.userVote.Type__c === 'Up') {
-                        this.upVoteVariant = 'brand';
-                    } else if (this.idea.userVote.Type__c === 'Down') {
-                        this.downVoteVariant = 'brand';
-                    }
-                }
+                this.updateVoteVariants();
             }
             this.error = undefined;
         } else if (result.error) {
@@ -33,11 +28,24 @@ export default class IdeaVoteComponent extends LightningElement {
         }
     }
 
+    updateVoteVariants() {
+        if (this.idea && this.idea.userVote) {
+            this.upVoteVariant = this.idea.userVote.Type__c === 'Up' ? 'brand' : '';
+            this.downVoteVariant = this.idea.userVote.Type__c === 'Down' ? 'brand' : '';
+        } else {
+            this.upVoteVariant = '';
+            this.downVoteVariant = '';
+        }
+    }
+
     handleUpVote() {
         handleUpVote({ ideaId: this.recordId })
             .then(() => {
                 this.showToast('Success', 'Upvoted successfully', 'success');
-                return refreshApex(this.wiredIdea);
+                return refreshApex(this.wiredIdeaResult);
+            })
+            .then(() => {
+                this.updateVoteVariants(); // Ensure the variants are updated after refresh
             })
             .catch(error => {
                 this.showToast('Error', 'Error upvoting: ' + error.body.message, 'error');
@@ -48,7 +56,10 @@ export default class IdeaVoteComponent extends LightningElement {
         handleDownVote({ ideaId: this.recordId })
             .then(() => {
                 this.showToast('Success', 'Downvoted successfully', 'success');
-                return refreshApex(this.wiredIdea);
+                return refreshApex(this.wiredIdeaResult);
+            })
+            .then(() => {
+                this.updateVoteVariants(); // Ensure the variants are updated after refresh
             })
             .catch(error => {
                 this.showToast('Error', 'Error downvoting: ' + error.body.message, 'error');
