@@ -13,24 +13,30 @@ export default class IdeaVoteComponent extends LightningElement {
     downVoteClass = 'icon-button'; // Default class
     wiredIdeaResult;
 
-    @wire(getIdeasWithVotes, { sourceType: 'CurrentUser', sortField: 'Total_Votes__c', sortOrder: 'DESC' })
+    @wire(getIdeasWithVotes)
     wiredIdea(result) {
         console.log('Wired method called with result:', result);
         this.wiredIdeaResult = result;
+
         if (result.data) {
             console.log('Data received:', result.data);
             this.idea = result.data.find(ideaWrapper => ideaWrapper.idea.Id === this.recordId);
+
             if (this.idea) {
                 console.log('Idea found with recordId:', this.recordId, 'Idea data:', this.idea);
                 this.updateVoteClasses();
             } else {
                 console.warn('No idea found with recordId:', this.recordId);
+                console.log('Available Idea IDs:', result.data.map(ideaWrapper => ideaWrapper.idea.Id));
             }
+
             this.error = undefined;
         } else if (result.error) {
             console.error('Error fetching ideas:', result.error);
             this.error = result.error;
             this.idea = undefined;
+        } else {
+            console.log('No data and no error. This might be a transient state.');
         }
     }
 

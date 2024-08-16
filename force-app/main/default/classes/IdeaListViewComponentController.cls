@@ -4,6 +4,20 @@ public with sharing class IdeaListViewComponentController {
     public static List<IdeaWrapper> getIdeasWithVotes(String sourceType, String sortField, String sortOrder, String statusFilter) {
         Id currentUserId = UserInfo.getUserId();
 
+        // Debugging information
+        System.debug('sourceType: ' + sourceType);
+        System.debug('sortField: ' + sortField);
+        System.debug('sortOrder: ' + sortOrder);
+        System.debug('statusFilter: ' + statusFilter);
+
+        // Provide default values if parameters are null
+        if (sortField == null) {
+            sortField = 'Total_Votes__c';
+        }
+        if (sortOrder == null) {
+            sortOrder = 'DESC';
+        }
+
         // Base query for ideas
         String baseQuery = 'SELECT Id, Name, Product_Tag__c, Product_Tag__r.Name, Status__c, Subject__c, Submitted_By__c, Submitted_By__r.Name, Up__c, Down__c FROM Idea__c';
 
@@ -14,43 +28,56 @@ public with sharing class IdeaListViewComponentController {
             baseQuery += ' WHERE Id != NULL'; // Ensures WHERE clause is always valid
         }
 
-        // Apply status filter if provided
-        if (!String.isBlank(statusFilter)) {
-            List<String> statusList = statusFilter.split(',');
-            baseQuery += ' AND Status__c IN :statusList';
+        // Apply status filter if provided and valid
+        if (statusFilter != null && !String.isBlank(statusFilter)) {
+            try {
+                List<String> statusList = statusFilter.split(',');
+                if (!statusList.isEmpty()) {
+                    baseQuery += ' AND Status__c IN :statusList';
+                }
+            } catch (Exception e) {
+                System.debug('Error processing statusFilter: ' + e.getMessage());
+            }
         }
 
         // Apply sorting based on sortField and sortOrder
         baseQuery += ' ORDER BY ' + sortField + ' ' + sortOrder + ' LIMIT 100';
 
-        // Execute the query
-        List<Idea__c> ideas = Database.query(baseQuery);
+        try {
+            // Execute the query
+            System.debug('Final Query: ' + baseQuery);
+            List<Idea__c> ideas = Database.query(baseQuery);
 
-        // Collect idea IDs for further processing
-        Set<Id> ideaIds = new Set<Id>();
-        for (Idea__c idea : ideas) {
-            ideaIds.add(idea.Id);
-        }
-
-        // Map to hold votes related to the ideas
-        Map<Id, Idea_Vote__c> ideaVotesMap = new Map<Id, Idea_Vote__c>();
-        if (!ideaIds.isEmpty()) {
-            for (Idea_Vote__c vote : [SELECT Id, Idea__c, Type__c, Submitted_By__c
-                                      FROM Idea_Vote__c 
-                                      WHERE Submitted_By__c = :currentUserId 
-                                      AND Idea__c IN :ideaIds]) {
-                ideaVotesMap.put(vote.Idea__c, vote);
+            // Collect idea IDs for further processing
+            Set<Id> ideaIds = new Set<Id>();
+            for (Idea__c idea : ideas) {
+                ideaIds.add(idea.Id);
             }
-        }
 
-        // Wrap the Ideas and associate the votes
-        List<IdeaWrapper> ideaList = new List<IdeaWrapper>();
-        for (Idea__c idea : ideas) {
-            Idea_Vote__c userVote = ideaVotesMap.get(idea.Id);
-            ideaList.add(new IdeaWrapper(idea, userVote));
-        }
+            // Map to hold votes related to the ideas
+            Map<Id, Idea_Vote__c> ideaVotesMap = new Map<Id, Idea_Vote__c>();
+            if (!ideaIds.isEmpty()) {
+                for (Idea_Vote__c vote : [SELECT Id, Idea__c, Type__c, Submitted_By__c
+                                          FROM Idea_Vote__c 
+                                          WHERE Submitted_By__c = :currentUserId 
+                                          AND Idea__c IN :ideaIds]) {
+                    ideaVotesMap.put(vote.Idea__c, vote);
+                }
+            }
 
-        return ideaList;
+            // Wrap the Ideas and associate the votes
+            List<IdeaWrapper> ideaList = new List<IdeaWrapper>();
+            for (Idea__c idea : ideas) {
+                Idea_Vote__c userVote = ideaVotesMap.get(idea.Id);
+                ideaList.add(new IdeaWrapper(idea, userVote));
+            }
+
+            return ideaList;
+        } catch (Exception e) {
+            // Log the error and throw a handled exception to the client
+            System.debug('Error in getIdeasWithVotes: ' + e.getMessage());
+            throw new AuraHandledException('Error in getIdeasWithVotes: ' + e.getMessage());
+        }
     }
 
     // Method to handle upvote
