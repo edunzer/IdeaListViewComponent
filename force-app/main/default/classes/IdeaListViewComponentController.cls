@@ -1,7 +1,7 @@
 public with sharing class IdeaListViewComponentController {
 
     @AuraEnabled(cacheable=true)
-    public static List<IdeaWrapper> getIdeasWithVotes(String sourceType, String sortField, String sortOrder) {
+    public static List<IdeaWrapper> getIdeasWithVotes(String sourceType, String sortField, String sortOrder, String statusFilter) {
         Id currentUserId = UserInfo.getUserId();
 
         // Base query for ideas
@@ -10,6 +10,14 @@ public with sharing class IdeaListViewComponentController {
         // Apply filter based on sourceType
         if (sourceType == 'CurrentUser') {
             baseQuery += ' WHERE Submitted_By__c = :currentUserId';
+        } else {
+            baseQuery += ' WHERE Id != NULL'; // Ensures WHERE clause is always valid
+        }
+
+        // Apply status filter if provided
+        if (!String.isBlank(statusFilter)) {
+            List<String> statusList = statusFilter.split(',');
+            baseQuery += ' AND Status__c IN :statusList';
         }
 
         // Apply sorting based on sortField and sortOrder

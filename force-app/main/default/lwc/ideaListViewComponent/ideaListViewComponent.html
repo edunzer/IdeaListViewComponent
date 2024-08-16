@@ -19,9 +19,6 @@
                             <div class="slds-truncate">Subject</div>
                         </th>
                         <th scope="col">
-                            <div class="slds-truncate">Submitted By</div>
-                        </th>
-                        <th scope="col">
                             <div class="slds-truncate">Up Vote</div>
                         </th>
                         <th scope="col">
@@ -47,11 +44,6 @@
                             </td>
                             <td>
                                 <div class="slds-truncate">{ideaWrapper.idea.Subject__c}</div>
-                            </td>
-                            <td>
-                                <a href={ideaWrapper.submittedByUrl}>
-                                    <div class="slds-truncate">{ideaWrapper.idea.Submitted_By__r.Name}</div>
-                                </a>
                             </td>
                             <td>
                                 <lightning-button-icon

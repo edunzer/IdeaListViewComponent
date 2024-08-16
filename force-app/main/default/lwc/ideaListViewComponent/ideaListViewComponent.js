@@ -10,12 +10,13 @@ export default class IdeaListViewComponent extends LightningElement {
     @api sourceType = 'All'; // Default to showing all ideas
     @api sortField = 'Total_Votes__c'; // Default sort field
     @api sortOrder = 'DESC'; // Default sort order (descending)
+    @api statusFilter = ''; // New status filter property
 
     ideas = [];
     error;
     wiredIdeasResult;
 
-    @wire(getIdeasWithVotes, { sourceType: '$sourceType', sortField: '$sortField', sortOrder: '$sortOrder' })
+    @wire(getIdeasWithVotes, { sourceType: '$sourceType', sortField: '$sortField', sortOrder: '$sortOrder', statusFilter: '$statusFilter' })
     wiredIdeas(result) {
         this.wiredIdeasResult = result;
         const { data, error } = result;
