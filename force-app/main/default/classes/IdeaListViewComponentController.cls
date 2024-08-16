@@ -4,7 +4,7 @@ public with sharing class IdeaListViewComponentController {
         Id currentUserId = UserInfo.getUserId();
 
         // Step 1: Query all Ideas
-        List<Idea__c> ideas = [SELECT Id, Name, Product_Tag__c, Product_Tag__r.Name, Status__c, Subject__c, Submitted_By__c, Submitted_By__r.Name
+        List<Idea__c> ideas = [SELECT Id, Name, Product_Tag__c, Product_Tag__r.Name, Status__c, Subject__c, Submitted_By__c, Submitted_By__r.Name, Up__c, Down__c 
                                FROM Idea__c
                                ORDER BY Total_Votes__c DESC
                                LIMIT 100];

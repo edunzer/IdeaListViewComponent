@@ -62,6 +62,7 @@
                                     onclick={handleUpVote}
                                     data-id={ideaWrapper.idea.Id}>
                                 </lightning-button-icon>
+                                <span>{ideaWrapper.idea.Up__c}</span> <!-- Directly reference Up__c -->
                             </td>
                             <td>
                                 <lightning-button-icon
@@ -72,6 +73,7 @@
                                     onclick={handleDownVote}
                                     data-id={ideaWrapper.idea.Id}>
                                 </lightning-button-icon>
+                                <span>{ideaWrapper.idea.Down__c}</span> <!-- Directly reference Down__c -->
                             </td>
                         </tr>
                     </template>
