@@ -2,6 +2,7 @@ import { LightningElement, api, wire } from 'lwc';
 import getIdeasWithVotes from '@salesforce/apex/IdeaListViewComponentController.getIdeasWithVotes';
 import handleUpVote from '@salesforce/apex/IdeaListViewComponentController.handleUpVote';
 import handleDownVote from '@salesforce/apex/IdeaListViewComponentController.handleDownVote';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
 
 export default class IdeaListViewComponent extends LightningElement {
@@ -54,23 +55,56 @@ export default class IdeaListViewComponent extends LightningElement {
 
     handleUpVote(event) {
         const ideaId = event.currentTarget.dataset.id;
+        const ideaWrapper = this.ideas.find(idea => idea.idea.Id === ideaId);
+        const initialVoteType = ideaWrapper && ideaWrapper.userVote ? ideaWrapper.userVote.Type__c : null;
+
         handleUpVote({ ideaId })
             .then(() => {
+                let message;
+                if (initialVoteType === 'Up') {
+                    message = 'Upvote removed successfully';
+                } else if (initialVoteType === 'Down') {
+                    message = 'Vote changed to Upvote successfully';
+                } else {
+                    message = 'Upvoted successfully';
+                }
+                this.showToast('Success', message, 'success');
                 return refreshApex(this.wiredIdeasResult);
             })
             .catch(error => {
-                console.error('Error handling upvote:', error);
+                this.showToast('Error', 'Error upvoting: ' + error.body.message, 'error');
             });
     }
 
     handleDownVote(event) {
         const ideaId = event.currentTarget.dataset.id;
+        const ideaWrapper = this.ideas.find(idea => idea.idea.Id === ideaId);
+        const initialVoteType = ideaWrapper && ideaWrapper.userVote ? ideaWrapper.userVote.Type__c : null;
+
         handleDownVote({ ideaId })
             .then(() => {
+                let message;
+                if (initialVoteType === 'Down') {
+                    message = 'Downvote removed successfully';
+                } else if (initialVoteType === 'Up') {
+                    message = 'Vote changed to Downvote successfully';
+                } else {
+                    message = 'Downvoted successfully';
+                }
+                this.showToast('Success', message, 'success');
                 return refreshApex(this.wiredIdeasResult);
             })
             .catch(error => {
-                console.error('Error handling downvote:', error);
+                this.showToast('Error', 'Error downvoting: ' + error.body.message, 'error');
             });
+    }
+
+    showToast(title, message, variant) {
+        const event = new ShowToastEvent({
+            title: title,
+            message: message,
+            variant: variant,
+        });
+        this.dispatchEvent(event);
     }
 }
