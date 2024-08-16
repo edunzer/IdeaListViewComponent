@@ -1,39 +1,37 @@
 import { LightningElement, api, wire } from 'lwc';
 import getIdeasWithVotes from '@salesforce/apex/IdeaListViewComponentController.getIdeasWithVotes';
+import handleUpVote from '@salesforce/apex/IdeaListViewComponentController.handleUpVote';
+import handleDownVote from '@salesforce/apex/IdeaListViewComponentController.handleDownVote';
+import { refreshApex } from '@salesforce/apex';
 
 export default class IdeaListViewComponent extends LightningElement {
     @api title = 'Most Popular Ideas';
     ideas = [];
     error;
+    wiredIdeasResult;
 
     @wire(getIdeasWithVotes)
-    wiredIdeas({ error, data }) {
-        console.log('wiredIdeas method called');
-
+    wiredIdeas(result) {
+        this.wiredIdeasResult = result;
+        const { data, error } = result;
         if (data) {
-            console.log('Raw data returned from Apex:', data);
-
             this.ideas = data.map(ideaWrapper => {
                 let upVoteVariant = '';
                 let downVoteVariant = '';
 
                 if (ideaWrapper.userVote) {
                     if (ideaWrapper.userVote.Type__c === 'Up') {
-                        upVoteVariant = 'brand'; // Apply 'brand' variant for upvote
-                        console.log(`Upvote processed for Idea ID: ${ideaWrapper.idea.Id}`);
+                        upVoteVariant = 'brand'; // Highlight upvote
                     } else if (ideaWrapper.userVote.Type__c === 'Down') {
-                        downVoteVariant = 'brand'; // Apply 'brand' variant for downvote
-                        console.log(`Downvote processed for Idea ID: ${ideaWrapper.idea.Id}`);
+                        downVoteVariant = 'brand'; // Highlight downvote
                     }
-                } else {
-                    console.log(`No vote data for Idea ID: ${ideaWrapper.idea.Id}`);
                 }
 
                 const ideaId = ideaWrapper.idea.Id;
                 const productTagId = ideaWrapper.idea.Product_Tag__c;
                 const submittedById = ideaWrapper.idea.Submitted_By__c;
 
-                const processedIdeaWrapper = {
+                return {
                     ...ideaWrapper,
                     upVoteVariant,
                     downVoteVariant,
@@ -41,15 +39,10 @@ export default class IdeaListViewComponent extends LightningElement {
                     productTagUrl: `/ideaexchange/s/adm-product-tag/${productTagId}`,
                     submittedByUrl: `/ideaexchange/s/profile/${submittedById}`
                 };
-
-                console.log('Processed Idea Wrapper:', processedIdeaWrapper);
-                return processedIdeaWrapper;
             });
 
-            console.log('Final ideas array:', this.ideas);
             this.error = undefined;
         } else if (error) {
-            console.error('Error returned from Apex:', error);
             this.error = error;
             this.ideas = [];
         }
@@ -57,11 +50,23 @@ export default class IdeaListViewComponent extends LightningElement {
 
     handleUpVote(event) {
         const ideaId = event.currentTarget.dataset.id;
-        console.log('Upvote for Idea:', ideaId);
+        handleUpVote({ ideaId })
+            .then(() => {
+                return refreshApex(this.wiredIdeasResult);
+            })
+            .catch(error => {
+                console.error('Error handling upvote:', error);
+            });
     }
 
     handleDownVote(event) {
         const ideaId = event.currentTarget.dataset.id;
-        console.log('Downvote for Idea:', ideaId);
+        handleDownVote({ ideaId })
+            .then(() => {
+                return refreshApex(this.wiredIdeasResult);
+            })
+            .catch(error => {
+                console.error('Error handling downvote:', error);
+            });
     }
 }
