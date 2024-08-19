@@ -5,6 +5,51 @@ import handleDownVote from '@salesforce/apex/IdeaListViewComponentController.han
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
 
+const columns = [
+    {
+        label: 'Idea Name',
+        fieldName: 'ideaUrl',
+        type: 'url',
+        typeAttributes: {
+            label: { fieldName: 'ideaName' },
+        },
+    },
+    {
+        label: 'Product',
+        fieldName: 'productTagUrl',
+        type: 'url',
+        typeAttributes: {
+            label: { fieldName: 'productTagName' },
+        },
+    },
+    { label: 'Status', fieldName: 'status', type: 'text' },
+    { label: 'Subject', fieldName: 'subject', type: 'text',initialWidth: 380 },
+    {
+        label: 'Up',
+        type: 'button-icon',
+        initialWidth: 60, // Adjust the width as needed
+        typeAttributes: {
+            iconName: 'utility:like',
+            variant: { fieldName: 'upVoteVariant' },
+            name: 'upvote',
+            alternativeText: 'Up Vote',
+            title: 'Up Vote',
+        },
+    },
+    {
+        label: 'Down',
+        type: 'button-icon',
+        initialWidth: 60, // Adjust the width as needed
+        typeAttributes: {
+            iconName: 'utility:dislike',
+            variant: { fieldName: 'downVoteVariant' },
+            name: 'downvote',
+            alternativeText: 'Down Vote',
+            title: 'Down Vote',
+        },
+    },
+];
+
 export default class IdeaListViewComponent extends LightningElement {
     @api title = 'Most Popular Ideas'; // Title set from the property in the .js-meta.xml
     @api sourceType = 'All'; // Default to showing all ideas
@@ -13,6 +58,7 @@ export default class IdeaListViewComponent extends LightningElement {
     @api statusFilter = ''; // New status filter property
 
     ideas = [];
+    columns = columns;
     error;
     wiredIdeasResult;
 
@@ -37,17 +83,16 @@ export default class IdeaListViewComponent extends LightningElement {
                     }
                 }
 
-                const ideaId = ideaWrapper.idea.Id;
-                const productTagId = ideaWrapper.idea.Product_Tag__c;
-                const submittedById = ideaWrapper.idea.Submitted_By__c;
-
                 return {
-                    ...ideaWrapper,
+                    ideaId: ideaWrapper.idea.Id,
+                    ideaName: ideaWrapper.idea.Name,
+                    ideaUrl: `/ideaexchange/s/idea/${ideaWrapper.idea.Id}`,
+                    productTagName: ideaWrapper.idea.Product_Tag__r.Name,
+                    productTagUrl: `/ideaexchange/s/adm-product-tag/${ideaWrapper.idea.Product_Tag__c}`,
+                    status: ideaWrapper.idea.Status__c,
+                    subject: ideaWrapper.idea.Subject__c,
                     upVoteVariant,
                     downVoteVariant,
-                    ideaUrl: `/ideaexchange/s/idea/${ideaId}`,
-                    productTagUrl: `/ideaexchange/s/adm-product-tag/${productTagId}`,
-                    submittedByUrl: `/ideaexchange/s/profile/${submittedById}`
                 };
             });
 
@@ -60,10 +105,21 @@ export default class IdeaListViewComponent extends LightningElement {
         }
     }
 
-    handleUpVote(event) {
-        const ideaId = event.currentTarget.dataset.id;
+    handleRowAction(event) {
+        const actionName = event.detail.action.name;
+        const ideaId = event.detail.row.ideaId;
+
+        if (actionName === 'upvote') {
+            this.handleUpVote(ideaId);
+        } else if (actionName === 'downvote') {
+            this.handleDownVote(ideaId);
+        }
+    }
+    
+
+    handleUpVote(ideaId) {
         console.log('Upvote button clicked for Idea ID:', ideaId);
-        const ideaWrapper = this.ideas.find(idea => idea.idea.Id === ideaId);
+        const ideaWrapper = this.ideas.find(idea => idea.ideaId === ideaId);
         const initialVoteType = ideaWrapper && ideaWrapper.userVote ? ideaWrapper.userVote.Type__c : null;
 
         handleUpVote({ ideaId })
@@ -88,10 +144,9 @@ export default class IdeaListViewComponent extends LightningElement {
             });
     }
 
-    handleDownVote(event) {
-        const ideaId = event.currentTarget.dataset.id;
+    handleDownVote(ideaId) {
         console.log('Downvote button clicked for Idea ID:', ideaId);
-        const ideaWrapper = this.ideas.find(idea => idea.idea.Id === ideaId);
+        const ideaWrapper = this.ideas.find(idea => idea.ideaId === ideaId);
         const initialVoteType = ideaWrapper && ideaWrapper.userVote ? ideaWrapper.userVote.Type__c : null;
 
         handleDownVote({ ideaId })
@@ -119,9 +174,9 @@ export default class IdeaListViewComponent extends LightningElement {
     showToast(title, message, variant) {
         console.log('Show toast:', title, message, variant);
         const event = new ShowToastEvent({
-            title: title,
-            message: message,
-            variant: variant,
+            title,
+            message,
+            variant,
         });
         this.dispatchEvent(event);
     }

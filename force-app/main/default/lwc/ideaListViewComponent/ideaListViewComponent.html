@@ -1,76 +1,15 @@
-<!-- sldsValidatorIgnore -->
-<!-- sldsValidatorIgnore -->
 <template>
     <lightning-card title={title}>
         <template if:true={ideas}>
-            <table class="slds-table slds-table_bordered slds-table_cell-buffer">
-                <thead>
-                    <tr class="slds-line-height_reset">
-                        <th scope="col">
-                            <div class="slds-truncate">Idea Name</div>
-                        </th>
-                        <th scope="col">
-                            <div class="slds-truncate">Product Tag</div>
-                        </th>
-                        <th scope="col">
-                            <div class="slds-truncate">Status</div>
-                        </th>
-                        <th scope="col">
-                            <div class="slds-truncate">Subject</div>
-                        </th>
-                        <th scope="col">
-                            <div class="slds-truncate">Up Vote</div>
-                        </th>
-                        <th scope="col">
-                            <div class="slds-truncate">Down Vote</div>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <template for:each={ideas} for:item="ideaWrapper">
-                        <tr key={ideaWrapper.idea.Id}>
-                            <td>
-                                <a href={ideaWrapper.ideaUrl}>
-                                    <div class="slds-truncate">{ideaWrapper.idea.Name}</div>
-                                </a>
-                            </td>
-                            <td>
-                                <a href={ideaWrapper.productTagUrl}>
-                                    <div class="slds-truncate">{ideaWrapper.idea.Product_Tag__r.Name}</div>
-                                </a>
-                            </td>
-                            <td>
-                                <div class="slds-truncate">{ideaWrapper.idea.Status__c}</div>
-                            </td>
-                            <td>
-                                <div class="slds-truncate">{ideaWrapper.idea.Subject__c}</div>
-                            </td>
-                            <td>
-                                <lightning-button-icon
-                                    icon-name="utility:like"
-                                    alternative-text="Up Vote"
-                                    title="Up Vote"
-                                    variant={ideaWrapper.upVoteVariant}
-                                    onclick={handleUpVote}
-                                    data-id={ideaWrapper.idea.Id}>
-                                </lightning-button-icon>
-                                <span>{ideaWrapper.idea.Up__c}</span> <!-- Directly reference Up__c -->
-                            </td>
-                            <td>
-                                <lightning-button-icon
-                                    icon-name="utility:dislike"
-                                    alternative-text="Down Vote"
-                                    title="Down Vote"
-                                    variant={ideaWrapper.downVoteVariant}
-                                    onclick={handleDownVote}
-                                    data-id={ideaWrapper.idea.Id}>
-                                </lightning-button-icon>
-                                <span>{ideaWrapper.idea.Down__c}</span> <!-- Directly reference Down__c -->
-                            </td>
-                        </tr>
-                    </template>
-                </tbody>
-            </table>
+            <lightning-datatable
+                data={ideas}
+                columns={columns}
+                key-field="ideaId" 
+                onrowaction={handleRowAction}
+                hide-checkbox-column="true"
+                resize-column-disabled
+            >
+            </lightning-datatable>
         </template>
         <template if:true={error}>
             <div class="slds-text-color_error">
