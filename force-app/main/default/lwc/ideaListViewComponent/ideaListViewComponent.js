@@ -7,12 +7,13 @@ import { refreshApex } from '@salesforce/apex';
 
 const columns = [
     {
-        label: 'Idea Name',
+        label: 'Subject',
         fieldName: 'ideaUrl',
         type: 'url',
         typeAttributes: {
-            label: { fieldName: 'ideaName' },
+            label: { fieldName: 'subject' },
         },
+        initialWidth: 380, // Adjust the width as needed
     },
     {
         label: 'Product',
@@ -23,7 +24,13 @@ const columns = [
         },
     },
     { label: 'Status', fieldName: 'status', type: 'text' },
-    { label: 'Subject', fieldName: 'subject', type: 'text',initialWidth: 380 },
+    {
+        label: '',
+        fieldName: 'upVoteCount',
+        type: 'number',
+        initialWidth: 10, // Adjust the width as needed
+        cellAttributes: { alignment: 'center' }
+    },
     {
         label: 'Up',
         type: 'button-icon',
@@ -35,6 +42,13 @@ const columns = [
             alternativeText: 'Up Vote',
             title: 'Up Vote',
         },
+    },
+    {
+        label: '',
+        fieldName: 'downVoteCount',
+        type: 'number',
+        initialWidth: 10, // Adjust the width as needed
+        cellAttributes: { alignment: 'center' }
     },
     {
         label: 'Down',
@@ -85,12 +99,13 @@ export default class IdeaListViewComponent extends LightningElement {
 
                 return {
                     ideaId: ideaWrapper.idea.Id,
-                    ideaName: ideaWrapper.idea.Name,
                     ideaUrl: `/ideaexchange/s/idea/${ideaWrapper.idea.Id}`,
                     productTagName: ideaWrapper.idea.Product_Tag__r.Name,
                     productTagUrl: `/ideaexchange/s/adm-product-tag/${ideaWrapper.idea.Product_Tag__c}`,
                     status: ideaWrapper.idea.Status__c,
-                    subject: ideaWrapper.idea.Subject__c,
+                    subject: ideaWrapper.idea.Subject__c, // Use subject as label for the URL
+                    upVoteCount: ideaWrapper.idea.Up__c, // Add upvote count
+                    downVoteCount: ideaWrapper.idea.Down__c, // Add downvote count
                     upVoteVariant,
                     downVoteVariant,
                 };
@@ -115,7 +130,6 @@ export default class IdeaListViewComponent extends LightningElement {
             this.handleDownVote(ideaId);
         }
     }
-    
 
     handleUpVote(ideaId) {
         console.log('Upvote button clicked for Idea ID:', ideaId);
