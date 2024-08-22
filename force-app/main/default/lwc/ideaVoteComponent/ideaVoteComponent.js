@@ -1,7 +1,7 @@
 import { LightningElement, api, wire, track } from 'lwc';
-import handleUpVote from '@salesforce/apex/IdeaListViewComponentController.handleUpVote';
-import handleDownVote from '@salesforce/apex/IdeaListViewComponentController.handleDownVote';
-import getIdeasWithVotes from '@salesforce/apex/IdeaListViewComponentController.getIdeasWithVotes';
+import handleUpVote from '@salesforce/apex/IdeaVoteComponentController.handleUpVote';
+import handleDownVote from '@salesforce/apex/IdeaVoteComponentController.handleDownVote';
+import getIdeaWithVotes from '@salesforce/apex/IdeaVoteComponentController.getIdeaWithVotes';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
 
@@ -17,31 +17,31 @@ export default class IdeaVoteComponent extends LightningElement {
         console.log('IdeaVoteComponent connected. Record ID:', this.recordId);
     }
 
-    @wire(getIdeasWithVotes, { 
-        sourceType: 'All', 
-        sortField: 'Total_Votes__c', 
-        sortOrder: 'DESC', 
-        statusFilter: 'Active', 
-        recordId: '$recordId' 
-    })
+    @wire(getIdeaWithVotes, { recordId: '$recordId' })
     wiredIdea(result) {
         console.log('Wired method called. Record ID:', this.recordId);
+        
+        if (!this.recordId) {
+            console.warn('Record ID is not set. Skipping data fetch.');
+            return;
+        }
+    
         this.wiredIdeaResult = result;
-
+    
         if (result.data) {
             this.isLoading = false; // Stop loading indicator
-            this.idea = result.data.length > 0 ? result.data.find(ideaWrapper => ideaWrapper.idea.Id === this.recordId) : null;
-
+            this.idea = result.data;
+    
             if (this.idea) {
                 this.updateVoteClasses();
             } else {
                 console.warn('No idea found with recordId:', this.recordId);
             }
-
+    
             this.error = undefined;
         } else if (result.error) {
             this.isLoading = false; // Stop loading indicator
-            console.error('Error fetching ideas:', result.error);
+            console.error('Error fetching idea:', result.error);
             this.logErrorDetails(result.error);
             this.error = result.error;
             this.idea = undefined;
@@ -49,6 +49,7 @@ export default class IdeaVoteComponent extends LightningElement {
             console.log('No data and no error. This might be a transient state.');
         }
     }
+    
 
     logErrorDetails(error) {
         if (error) {
