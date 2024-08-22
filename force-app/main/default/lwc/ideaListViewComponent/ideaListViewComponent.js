@@ -1,4 +1,4 @@
-import { LightningElement, api, wire } from 'lwc';
+import { LightningElement, api, wire, track } from 'lwc';
 import getIdeasWithVotes from '@salesforce/apex/IdeaListViewComponentController.getIdeasWithVotes';
 import handleUpVote from '@salesforce/apex/IdeaListViewComponentController.handleUpVote';
 import handleDownVote from '@salesforce/apex/IdeaListViewComponentController.handleDownVote';
@@ -65,58 +65,116 @@ const columns = [
 ];
 
 export default class IdeaListViewComponent extends LightningElement {
-    @api title = 'Most Popular Ideas'; // Title set from the property in the .js-meta.xml
-    @api sourceType = 'All'; // Default to showing all ideas
-    @api sortField = 'Total_Votes__c'; // Default sort field
-    @api sortOrder = 'DESC'; // Default sort order (descending)
-    @api statusFilter = ''; // New status filter property
+    @api title = 'Most Popular Ideas';
+    @api sourceType = 'All';
+    @api sortField = 'Total_Votes__c';
+    @api sortOrder = 'DESC';
+    @api statusFilter = '';
 
-    ideas = [];
-    columns = columns;
-    error;
+    @track ideas = [];
+    @track columns = columns;
+    @track error;
+    @track page = 1; // Default page
+    @track pageSize = 10; // Default page size
+    @track totalRecords = 0; // Total records returned by the server
+    @track totalPage = 1;
+
     wiredIdeasResult;
 
-    @wire(getIdeasWithVotes, { sourceType: '$sourceType', sortField: '$sortField', sortOrder: '$sortOrder', statusFilter: '$statusFilter' })
+    @wire(getIdeasWithVotes, { 
+        sourceType: '$sourceType', 
+        sortField: '$sortField', 
+        sortOrder: '$sortOrder', 
+        statusFilter: '$statusFilter',
+        pageSize: '$pageSize',
+        pageNumber: '$page'
+    })
     wiredIdeas(result) {
-        console.log('Wired method called with result:', result);
         this.wiredIdeasResult = result;
         const { data, error } = result;
+
         if (data) {
-            console.log('Data received:', data);
-            this.ideas = data.map(ideaWrapper => {
-                let upVoteVariant = '';
-                let downVoteVariant = '';
+            console.log('Data received from Apex:', data);
 
-                if (ideaWrapper.userVote) {
-                    if (ideaWrapper.userVote.Type__c === 'Up') {
-                        upVoteVariant = 'brand'; // Highlight upvote
-                        console.log('Idea ID', ideaWrapper.idea.Id, 'has an Up vote.');
-                    } else if (ideaWrapper.userVote.Type__c === 'Down') {
-                        downVoteVariant = 'brand'; // Highlight downvote
-                        console.log('Idea ID', ideaWrapper.idea.Id, 'has a Down vote.');
+            this.totalRecords = data.totalRecords;
+            console.log('Total Records:', this.totalRecords);
+
+            this.updateTotalPages();
+
+            console.log('Total Pages:', this.totalPage);
+            console.log('Current Page:', this.page);
+
+            // Reset the page to 1 if the current page exceeds the totalPage after filtering
+            if (this.page > this.totalPage) {
+                console.log(`Current page (${this.page}) is greater than total pages (${this.totalPage}), resetting to page 1.`);
+                this.page = 1;
+                refreshApex(this.wiredIdeasResult); // Refresh to load data for the first page
+            } else {
+                this.ideas = data.ideas.map(ideaWrapper => {
+                    let upVoteVariant = '';
+                    let downVoteVariant = '';
+
+                    if (ideaWrapper.userVote) {
+                        if (ideaWrapper.userVote.Type__c === 'Up') {
+                            upVoteVariant = 'brand';
+                        } else if (ideaWrapper.userVote.Type__c === 'Down') {
+                            downVoteVariant = 'brand';
+                        }
                     }
-                }
 
-                return {
-                    ideaId: ideaWrapper.idea.Id,
-                    ideaUrl: `/ideaexchange/s/idea/${ideaWrapper.idea.Id}`,
-                    productTagName: ideaWrapper.idea.Product_Tag__r.Name,
-                    productTagUrl: `/ideaexchange/s/adm-product-tag/${ideaWrapper.idea.Product_Tag__c}`,
-                    status: ideaWrapper.idea.Status__c,
-                    subject: ideaWrapper.idea.Subject__c, // Use subject as label for the URL
-                    upVoteCount: ideaWrapper.idea.Up__c, // Add upvote count
-                    downVoteCount: ideaWrapper.idea.Down__c, // Add downvote count
-                    upVoteVariant,
-                    downVoteVariant,
-                };
-            });
+                    return {
+                        ideaId: ideaWrapper.idea.Id,
+                        ideaUrl: `/ideaexchange/s/idea/${ideaWrapper.idea.Id}`,
+                        productTagName: ideaWrapper.idea.Product_Tag__r.Name,
+                        productTagUrl: `/ideaexchange/s/adm-product-tag/${ideaWrapper.idea.Product_Tag__c}`,
+                        status: ideaWrapper.idea.Status__c,
+                        subject: ideaWrapper.idea.Subject__c,
+                        upVoteCount: ideaWrapper.idea.Up__c,
+                        downVoteCount: ideaWrapper.idea.Down__c,
+                        upVoteVariant,
+                        downVoteVariant,
+                    };
+                });
+            }
 
-            console.log('Processed ideas:', this.ideas);
             this.error = undefined;
         } else if (error) {
             console.error('Error fetching ideas:', error);
             this.error = error;
             this.ideas = [];
+        }
+    }
+
+    updateTotalPages() {
+        this.totalPage = Math.ceil(this.totalRecords / this.pageSize);
+        console.log('Total Pages after update:', this.totalPage);
+    }
+
+    get isPreviousDisabled() {
+        const disabled = this.page === 1;
+        console.log('Is Previous Disabled:', disabled);
+        return disabled;
+    }
+
+    get isNextDisabled() {
+        const disabled = this.page === this.totalPage || this.totalPage === 0;
+        console.log('Is Next Disabled:', disabled);
+        return disabled;
+    }
+
+    handlePrevious() {
+        if (this.page > 1) {
+            this.page -= 1;
+            console.log('Navigating to previous page:', this.page);
+            refreshApex(this.wiredIdeasResult);
+        }
+    }
+
+    handleNext() {
+        if (this.page < this.totalPage) {
+            this.page += 1;
+            console.log('Navigating to next page:', this.page);
+            refreshApex(this.wiredIdeasResult);
         }
     }
 
