@@ -4,6 +4,11 @@ public with sharing class IdeaVoteComponentController {
     public static IdeaWrapper getIdeaWithVotes(Id recordId) {
         Id currentUserId = UserInfo.getUserId();
 
+        // Check if recordId is null
+        if (recordId == null) {
+            throw new AuraHandledException('Record ID is null. Cannot fetch Idea.');
+        }
+
         try {
             // Query to get the idea record based on recordId
             Idea__c idea = [SELECT Id, Name, Product_Tag__c, Product_Tag__r.Name, Status__c, Subject__c, Submitted_By__c, Submitted_By__r.Name, Up__c, Down__c 

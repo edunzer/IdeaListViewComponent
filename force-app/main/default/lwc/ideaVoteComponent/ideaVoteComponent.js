@@ -17,23 +17,27 @@ export default class IdeaVoteComponent extends LightningElement {
         console.log('IdeaVoteComponent connected. Record ID:', this.recordId);
     }
 
-    @wire(getIdeaWithVotes, { 
-        recordId: '$recordId' 
-    })
+    @wire(getIdeaWithVotes, { recordId: '$recordId' })
     wiredIdea(result) {
         console.log('Wired method called. Record ID:', this.recordId);
+        
+        if (!this.recordId) {
+            console.warn('Record ID is not set. Skipping data fetch.');
+            return;
+        }
+    
         this.wiredIdeaResult = result;
-
+    
         if (result.data) {
             this.isLoading = false; // Stop loading indicator
             this.idea = result.data;
-
+    
             if (this.idea) {
                 this.updateVoteClasses();
             } else {
                 console.warn('No idea found with recordId:', this.recordId);
             }
-
+    
             this.error = undefined;
         } else if (result.error) {
             this.isLoading = false; // Stop loading indicator
@@ -45,6 +49,7 @@ export default class IdeaVoteComponent extends LightningElement {
             console.log('No data and no error. This might be a transient state.');
         }
     }
+    
 
     logErrorDetails(error) {
         if (error) {
