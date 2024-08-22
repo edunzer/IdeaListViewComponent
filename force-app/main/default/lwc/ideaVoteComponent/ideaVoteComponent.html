@@ -1,17 +1,28 @@
 <template>
-    <template if:true={idea}>
-        <div class="button-container">
-            <button class={upVoteClass} onclick={handleUpVote}>
-                <lightning-icon icon-name="utility:like" variant={upVoteVariant} alternative-text="Up Vote"></lightning-icon>
-            </button>
-            <button class={downVoteClass} onclick={handleDownVote}>
-                <lightning-icon icon-name="utility:dislike" variant={downVoteVariant} alternative-text="Down Vote"></lightning-icon>
-            </button>
-        </div>
+    <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Loading"></lightning-spinner>
     </template>
-    <template if:true={error}>
-        <div class="slds-text-color_error">
-            {error}
-        </div>
+
+    <template if:false={isLoading}>
+        <template if:true={idea}>
+            <div class="button-container">
+                <button class={upVoteClass} onclick={handleUpVote}>
+                    <lightning-icon icon-name="utility:like" variant={upVoteVariant} alternative-text="Up Vote"></lightning-icon>
+                </button>
+                <button class={downVoteClass} onclick={handleDownVote}>
+                    <lightning-icon icon-name="utility:dislike" variant={downVoteVariant} alternative-text="Down Vote"></lightning-icon>
+                </button>
+            </div>
+        </template>
+        <template if:true={error}>
+            <div class="slds-text-color_error">
+                {error}
+            </div>
+        </template>
+        <template if:false={idea}>
+            <div class="slds-text-color_error">
+                No idea found. Please refresh the page or try again later.
+            </div>
+        </template>
     </template>
 </template>
