@@ -1,12 +1,14 @@
-/* ideaListViewComponent.css */
+/* Add padding or margin to the container around the datatable */
+.datatable-container {
+    margin-bottom: 20px; /* Add margin below the datatable */
+}
 
-/* Custom styles for the lightning-card */
+/* Optional: Keep the existing styles */
 .lightning-card {
     max-width: 100%; /* Ensure the card does not exceed its container */
     overflow-x: auto; /* Allow horizontal scrolling if content overflows */
 }
 
-/* Style the title of the lightning-card */
 .lightning-card__header {
     background-color: transparent; /* Remove background color */
     border-bottom: none; /* Remove border under the title */
@@ -15,7 +17,6 @@
     padding: 0; /* Adjust padding */
 }
 
-/* Optionally, you can add some margin or padding to the datatable if needed */
 .lightning-datatable {
-    margin-top: 10px; /* Example of adding some margin above the table */
+    margin-top: 10px; /* Margin above the table */
 }

@@ -1,55 +1,53 @@
 public with sharing class IdeaListViewComponentController {
 
     @AuraEnabled(cacheable=true)
-    public static List<IdeaWrapper> getIdeasWithVotes(String sourceType, String sortField, String sortOrder, String statusFilter, Id recordId) {
+    public static Map<String, Object> getIdeasWithVotes(String sourceType, String sortField, String sortOrder, String statusFilter, Id recordId, Integer pageSize, Integer pageNumber) {
         Id currentUserId = UserInfo.getUserId();
-    
+        Integer offset = (pageNumber - 1) * pageSize;
+
         // Base query for ideas
         String baseQuery = 'SELECT Id, Name, Product_Tag__c, Product_Tag__r.Name, Status__c, Subject__c, Submitted_By__c, Submitted_By__r.Name, Up__c, Down__c FROM Idea__c';
+        String countQuery = 'SELECT COUNT() FROM Idea__c';
         List<Idea__c> ideas;
+        Integer totalRecords;
 
         try {
+            String whereClause = '';
             if (recordId != null) {
-                // If recordId is provided, fetch that specific Idea
-                baseQuery += ' WHERE Id = :recordId';
-                ideas = [SELECT Id, Name, Product_Tag__c, Product_Tag__r.Name, Status__c, Subject__c, Submitted_By__c, Submitted_By__r.Name, Up__c, Down__c FROM Idea__c WHERE Id = :recordId];
+                whereClause = ' WHERE Id = :recordId';
             } else if (sourceType == 'CurrentUser') {
-                baseQuery += ' WHERE Submitted_By__c = :currentUserId';
-                ideas = Database.query(baseQuery);
+                whereClause = ' WHERE Submitted_By__c = :currentUserId';
             } else {
-                baseQuery += ' WHERE Id != NULL'; // Ensures WHERE clause is always valid
-                ideas = Database.query(baseQuery);
+                whereClause = ' WHERE Id != NULL'; // Ensures WHERE clause is always valid
             }
 
             // Apply status filter if provided and valid
             if (statusFilter != null && !String.isBlank(statusFilter)) {
-                try {
-                    List<String> statusList = statusFilter.split(',');
-                    if (!statusList.isEmpty()) {
-                        baseQuery += ' AND Status__c IN :statusList';
-                    }
-                } catch (Exception e) {
-                    System.debug('Error processing statusFilter: ' + e.getMessage());
+                List<String> statusList = statusFilter.split(',');
+                if (!statusList.isEmpty()) {
+                    whereClause += ' AND Status__c IN :statusList';
                 }
             }
 
-            // Apply sorting based on sortField and sortOrder
-            baseQuery += ' ORDER BY ' + sortField + ' ' + sortOrder + ' LIMIT 100';
-    
-            // Debugging output to verify final query
-            System.debug('Final Query: ' + baseQuery);
-    
-            // Execute the query
-            if (recordId == null) {
-                ideas = Database.query(baseQuery);
-            }
-    
+            // Append the whereClause to both queries
+            baseQuery += whereClause;
+            countQuery += whereClause;
+
+            // Apply sorting and pagination
+            baseQuery += ' ORDER BY ' + sortField + ' ' + sortOrder + ' LIMIT :pageSize OFFSET :offset';
+
+            // Execute the queries
+            ideas = Database.query(baseQuery);
+
+            // Execute the count query to get the total number of records
+            totalRecords = Database.countQuery(countQuery);  // Changed from SOQL to countQuery
+
             // Collect idea IDs for further processing
             Set<Id> ideaIds = new Set<Id>();
             for (Idea__c idea : ideas) {
                 ideaIds.add(idea.Id);
             }
-    
+
             // Map to hold votes related to the ideas
             Map<Id, Idea_Vote__c> ideaVotesMap = new Map<Id, Idea_Vote__c>();
             if (!ideaIds.isEmpty()) {
@@ -60,21 +58,27 @@ public with sharing class IdeaListViewComponentController {
                     ideaVotesMap.put(vote.Idea__c, vote);
                 }
             }
-    
+
             // Wrap the Ideas and associate the votes
             List<IdeaWrapper> ideaList = new List<IdeaWrapper>();
             for (Idea__c idea : ideas) {
                 Idea_Vote__c userVote = ideaVotesMap.get(idea.Id);
                 ideaList.add(new IdeaWrapper(idea, userVote));
             }
-    
-            return ideaList;
+
+            // Prepare the return map
+            Map<String, Object> resultMap = new Map<String, Object>();
+            resultMap.put('ideas', ideaList);
+            resultMap.put('totalRecords', totalRecords);
+
+            return resultMap;
         } catch (Exception e) {
             // Log the error and throw a handled exception to the client
             System.debug('Error in getIdeasWithVotes: ' + e.getMessage());
             throw new AuraHandledException('Error in getIdeasWithVotes: ' + e.getMessage());
         }
     }
+
     
 
     // Method to handle upvote
